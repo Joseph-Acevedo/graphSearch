@@ -6,8 +6,11 @@ import mapGenerator.MapGenerator;
 
 
 public class Dijkstra {
+	private static int INF = -1;
+	
 	private Node[] nodes;
 	
+	private ArrayList<Node> sequence;
 	private ArrayList<Node> unvisited;
 	private Stack<Node> visited;
 	
@@ -23,6 +26,10 @@ public class Dijkstra {
 		map = new MapGenerator(numNodes);
 		nodes = map.getNodes();
 		
+		startID = start;
+		endID = end;
+		
+		sequence = new ArrayList<Node>();
 		unvisited = new ArrayList<Node>();
 		visited = new Stack<Node>();
 		
@@ -31,9 +38,10 @@ public class Dijkstra {
 				current = n;
 				current.setDistance(0);
 				current.setFrom(null);
+				unvisited.add(n);
 			} else {
 				unvisited.add(n);
-				n.setDistance(-1);
+				n.setDistance(INF);
 			}
 		}
 		
@@ -41,18 +49,37 @@ public class Dijkstra {
 	}
 	
 	private void runDijkstra() {
-		
+		// While we still have nodes to check
+		// TODO: This will only work if I remove the nodes with no connections, maybe,
+		// It might just run through that node quickly and throw it out
+		while ( !unvisited.isEmpty() ) {
+			double minDist = unvisited.get(0).getDistance();
+			Node minimum = unvisited.get(0);
+			for (Node n: unvisited) {
+				if ( (n.getDistance() < minDist) && (minDist != INF) ) {
+					minDist = n.getDistance();
+					minimum = n;
+				}
+			}
+			
+			unvisited.remove(minimum);
+			current = minimum;
+			considerNode(current);
+		}
 	}
 	
 	private void considerNode(Node n) {
 		Node[] connections = n.getConnections();
-		double[] distances = n.getDistances();
+		double[] tenativeDistances = n.getDistances();
 		
 		// Distance is total current distance + tentative distance to node
-		for (int i = 0; i < distances.length; i++) {
-			distances[i] += n.getDistance();
-			if (distances[i] < connections[i].getDistance() || connections[i].getDistance() == -1) {
-				
+		// TODO: Make sure visited nodes are never checked again (Done, hopefully)
+		// This loops through all connections and checks if their length is lower
+		for (int i = 0; i < tenativeDistances.length; i++) {
+			tenativeDistances[i] += n.getDistance();
+			if ( !visited.contains(connections[i]) && (tenativeDistances[i] < connections[i].getDistance() || connections[i].getDistance() == INF) ) {
+				connections[i].setDistance(tenativeDistances[i]);
+				connections[i].setFrom(n);
 			}
 		}
 		

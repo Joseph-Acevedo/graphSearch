@@ -18,8 +18,8 @@ public class MapGenerator extends JPanel {
 	private static final long serialVersionUID = 1L;
 	private static final int WIDTH  = 800;
 	private static final int HEIGHT = 800;
-	private static final int SAFE_SIZE = 150;
-	private static final int NODE_RADIUS = 20;
+	private static final int SAFE_SIZE = 50;
+	private static final int NODE_RADIUS = 5;
 	private static final int CONNECTION_WIDTH = 5;
 	/* GENERATION CONSTANTS */
 	private static final float MIN_WEIGHT_FOR_CONNECTION = 6.0f;
@@ -140,27 +140,31 @@ public class MapGenerator extends JPanel {
 		g.setColor(Color.BLACK);
 		
 		for (Node n: nodes) {
-			drawNode(g, n);
 			if (n.getConnections() != null) {
 				for (Node c: n.getConnections()) {
 					drawConnection(g, n, c);
 				}
 			}
 		}
+		
+		for (Node n: nodes) {
+			drawNode(g, n);
+		}
+		
 		this.repaint();
 	}
 	
 	
 	private void drawNode(Graphics g, Node n) {
-		g.setColor(Color.WHITE);
-		g.fillOval(n.getX() - NODE_RADIUS, n.getY() - NODE_RADIUS, 2 * NODE_RADIUS, 2 * NODE_RADIUS);
+//		g.setColor(Color.WHITE);
+//		g.fillOval(n.getX() - NODE_RADIUS, n.getY() - NODE_RADIUS, 2 * NODE_RADIUS, 2 * NODE_RADIUS);
 		g.setColor(Color.BLACK);
 		g.drawOval(n.getX() - NODE_RADIUS, n.getY() - NODE_RADIUS, 2 * NODE_RADIUS, 2 * NODE_RADIUS);
-		g.drawString(n.getId(), n.getX(), n.getY());
+//		g.drawString(n.getId(), n.getX(), n.getY());
 	}
 
 	private void drawConnection(Graphics g, Node a, Node b) {
-		g.setColor(Color.BLACK);
+		g.setColor(Color.GRAY.darker());
 		g.drawLine(a.getX(), a.getY(), b.getX(), b.getY());
 	}
 	
