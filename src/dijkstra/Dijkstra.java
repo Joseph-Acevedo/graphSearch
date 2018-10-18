@@ -6,11 +6,12 @@ import mapGenerator.MapGenerator;
 
 
 public class Dijkstra {
+	
 	private static int INF = -1;
 	
 	private Node[] nodes;
 	
-	private ArrayList<Node> sequence;
+	//private ArrayList<Node> sequence;
 	private ArrayList<Node> unvisited;
 	private Stack<Node> visited;
 	
@@ -23,13 +24,14 @@ public class Dijkstra {
 	
 	
 	public Dijkstra(int numNodes, String start, String end) { 
-		map = new MapGenerator(numNodes);
+		//map = new MapGenerator(numNodes);
+		map = new MapGenerator( (int) (Math.sqrt(numNodes)),  (int) (Math.sqrt(numNodes)) );
 		nodes = map.getNodes();
 		
 		startID = start;
 		endID = end;
 		
-		sequence = new ArrayList<Node>();
+		//sequence = new ArrayList<Node>();
 		unvisited = new ArrayList<Node>();
 		visited = new Stack<Node>();
 		
@@ -50,7 +52,7 @@ public class Dijkstra {
 	
 	private void runDijkstra() {
 		// While we still have nodes to check
-		// TODO: This will only work if I remove the nodes with no connections, maybe,
+		// TODO: This will only )work if I remove the nodes with no connections, maybe,
 		// It might just run through that node quickly and throw it out
 		while ( !unvisited.isEmpty() ) {
 			double minDist = unvisited.get(0).getDistance();
@@ -65,6 +67,8 @@ public class Dijkstra {
 			unvisited.remove(minimum);
 			current = minimum;
 			considerNode(current);
+			visited.add(current);
+			current.setInSequence(true);
 		}
 	}
 	
@@ -88,7 +92,8 @@ public class Dijkstra {
 	
 	
 	public static void main(String[] args) {
-		new Dijkstra(10, "1", "10");
+		new Dijkstra(25, "1", "10");
+		//new MapGenerator(50, 50);
 	}
 	
 	

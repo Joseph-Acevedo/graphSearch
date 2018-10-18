@@ -12,6 +12,7 @@ public class Node {
 	private ArrayList<Node> connections;
 	private double distance;
 	private Node nodeFrom;
+	private boolean isSequence = false;
 	
 	public Node(long id, Point location) {
 		this.id = id;
@@ -51,6 +52,14 @@ public class Node {
 	
 	public void setFrom(Node n) {
 		nodeFrom = n;
+	}
+	
+	public boolean getInSequence() {
+		return isSequence;
+	}
+	
+	public void setInSequence(boolean is) {
+		isSequence = is;
 	}
 	
 	public Node getConnection(int index) {
