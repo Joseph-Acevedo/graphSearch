@@ -25,14 +25,15 @@ public class Dijkstra {
 	private MapGenerator map;
 	
 	
-	public Dijkstra(int numNodes, String start, String end) { 
+	public Dijkstra(int nodesWidth, int nodesHeight, Point start, Point end) { 
 		currSeq = new ArrayList<Node>();
 		
-		map = new MapGenerator( (int) (Math.sqrt(numNodes)),  (int) (Math.sqrt(numNodes)), this );
+		map = new MapGenerator( nodesWidth,  nodesHeight, this );
+		//map = new MapGenerator(nodesWidth*nodesHeight);
 		nodes = map.getNodes();
 		
-		source = start;
-		endID = end;
+		source = Integer.toString(start.x + (start.y * nodesWidth));
+		endID = Integer.toString(end.x + (end.y * nodesWidth));
 		
 		Q = new ArrayList<Node>();
 		S = new Stack<Node>();
@@ -91,7 +92,7 @@ public class Dijkstra {
 	
 	
 	public static void main(String[] args) {
-		new Dijkstra( (int) (Math.pow(20, 2)), "", "337");
+		new Dijkstra(20, 20, new Point(0, 0), new Point(19, 3));
 	}
 	
 	

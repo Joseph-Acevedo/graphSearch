@@ -25,7 +25,7 @@ public class MapGenerator extends JPanel {
 	private static final int NODE_RADIUS = 2;
 	private static final int CONNECTION_WIDTH = 5;
 	/* GENERATION CONSTANTS */
-	private static final float MIN_WEIGHT_FOR_CONNECTION = 6.0f;
+	private static final float MIN_WEIGHT_FOR_CONNECTION = 7.0f;
 	
 	private JFrame frame;
 	private Dijkstra pathfinder;
