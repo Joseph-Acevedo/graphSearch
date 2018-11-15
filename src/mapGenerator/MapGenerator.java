@@ -1,12 +1,15 @@
 package mapGenerator;
 
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Point;
 import java.util.ArrayList;
 import mathUtilities.MathUtilities;
+import dijkstra.Dijkstra;
 import dijkstra.Node;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -19,14 +22,16 @@ public class MapGenerator extends JPanel {
 	private static final int WIDTH  = 800;
 	private static final int HEIGHT = 800;
 	private static final int SAFE_SIZE = 50;
-	private static final int NODE_RADIUS = 5;
+	private static final int NODE_RADIUS = 2;
 	private static final int CONNECTION_WIDTH = 5;
 	/* GENERATION CONSTANTS */
 	private static final float MIN_WEIGHT_FOR_CONNECTION = 6.0f;
 	
 	private JFrame frame;
+	private Dijkstra pathfinder;
 	
 	private ArrayList<Node> nodes;	// A linearized version of the node map, a 1x(n^2) matrix
+	private Node endNode = null;
 	
 	private long currId = 0L;
 	private int n = 0;			// number of nodes
@@ -72,7 +77,10 @@ public class MapGenerator extends JPanel {
 	 * @param nodesWidth The number of nodes wide to create the grid
 	 * @param nodesHeight The number of nodes tall to create the grid
 	 */
-	public MapGenerator(int nodesWidth, int nodesHeight) {
+	public MapGenerator(int nodesWidth, int nodesHeight, Dijkstra pfinder) {
+		// TODO: Creating connections doesn't work correctly
+		pathfinder = pfinder;
+		
 		boolean[][] adjacencyMatrix = new boolean[nodesWidth*nodesHeight][nodesWidth*nodesHeight];
 		nodes = new ArrayList<Node>();
 		
@@ -90,6 +98,7 @@ public class MapGenerator extends JPanel {
 		frame = new JFrame();
 		
 		setPreferredSize( new Dimension( WIDTH, HEIGHT));
+		setBackground(Color.WHITE);
 		
 		frame.setLayout( new BorderLayout());
 		frame.add( this, BorderLayout.CENTER);
@@ -104,135 +113,91 @@ public class MapGenerator extends JPanel {
 	private void createNodeGrid(int nodesWidth, int nodesHeight) {
 		Node currentNode;
 		
-		for (int y = 0; y < nodesHeight - 1; y++) {
-			for (int x = 0; x < nodesWidth - 1; x++) {
+		for (int y = 0; y < nodesHeight; y++) {
+			for (int x = 0; x < nodesWidth; x++) {
 				currentNode = nodes.get( (x + (y * nodesWidth)) );
 				
-				if ( (x != 0) && (x != nodesWidth) ) {
-					if ( (y != 0) && (y != nodesHeight) ) {						
-						/* _________
-						 * ( a b c )
-						 * ( d E f )
-						 * ( g h i )
-						 * _________
-						 */
-						
-						currentNode.addConnection(nodes.get( ( (x - 1) + ( (y - 1) * nodesWidth)) )); // a
-						currentNode.addConnection(nodes.get( ( (x - 1) + ( (y + 1) * nodesWidth)) )); // g
-						currentNode.addConnection(nodes.get( ( (x - 1) + ( (y + 0) * nodesWidth)) )); // d
-						currentNode.addConnection(nodes.get( ( (x + 1) + ( (y - 1) * nodesWidth)) )); // c
-						currentNode.addConnection(nodes.get( ( (x + 1) + ( (y + 1) * nodesWidth)) )); // i
-						currentNode.addConnection(nodes.get( ( (x + 1) + ( (y - 0) * nodesWidth)) )); // f
-						currentNode.addConnection(nodes.get( ( (x + 0) + ( (y - 1) * nodesWidth)) )); // b
-						currentNode.addConnection(nodes.get( ( (x + 0) + ( (y + 1) * nodesWidth)) )); // h
-						// Normal
-					} else {
-						// Normal Left and Right but edge of top and bottom
-						if (y == 0) {
-							/* _________
-							 * ( a B c )
-							 * ( d e f )
-							 */
-							currentNode.addConnection(nodes.get(  ( (x - 1) + ( (y + 0) * nodesWidth))  )); // a
-							currentNode.addConnection(nodes.get(  ( (x + 1) + ( (y + 0) * nodesWidth))  )); // c
-							currentNode.addConnection(nodes.get(  ( (x - 1) + ( (y + 1) * nodesWidth))  )); // d
-							currentNode.addConnection(nodes.get(  ( (x + 1) + ( (y + 1) * nodesWidth))  )); // e
-							currentNode.addConnection(nodes.get(  ( (x + 0) + ( (y + 1) * nodesWidth))  )); // f
-
-							
-						} 
-						else if (y == nodesHeight) {
-							/*
-							 * ( a b c )
-							 * ( d E f )
-							 * __________
-							 */
-							currentNode.addConnection(nodes.get(  ( (x - 1) + ( (y + 0) * nodesWidth))  )); // d
-							currentNode.addConnection(nodes.get(  ( (x + 1) + ( (y + 0) * nodesWidth))  )); // f
-							currentNode.addConnection(nodes.get(  ( (x - 1) + ( (y - 1) * nodesWidth))  )); // a
-							currentNode.addConnection(nodes.get(  ( (x + 1) + ( (y - 1) * nodesWidth))  )); // b
-							currentNode.addConnection(nodes.get(  ( (x + 0) + ( (y - 1) * nodesWidth))  )); // c
-						}
-					}
+				/* === Edge Flags === */
+				boolean f_top    = false;
+				boolean f_bottom = false;
+				boolean f_left   = false;
+				boolean f_right  = false;
+				
+				if (x == 0) {
+					f_left = true;
+				}
+				else if (x == nodesWidth - 1) {
+					f_right = true;
+				}
+				
+				if (y == 0) {
+					f_top = true;
+				}
+				else if (y == nodesHeight - 1) {
+					f_bottom = true;
+				}
+				
+				if (f_left) {
+					currentNode.addConnection(nodes.get( ( (x + 1) + ( (y + 0) * nodesWidth)) ));
 					
-				} else {
-					if (x == 0) {
-						if ( (y != 0) && (y != nodesWidth) ) {
-							/*
-							 * |( a b )
-							 * |( C d )
-							 * |( e f )
-							 */
-							currentNode.addConnection(nodes.get(  ( (x + 0) + ( (y - 1) * nodesWidth))  )); // a
-							currentNode.addConnection(nodes.get(  ( (x + 0) + ( (y + 1) * nodesWidth))  )); // e
-							currentNode.addConnection(nodes.get(  ( (x + 1) + ( (y - 1) * nodesWidth))  )); // b
-							currentNode.addConnection(nodes.get(  ( (x + 1) + ( (y + 0) * nodesWidth))  )); // d
-							currentNode.addConnection(nodes.get(  ( (x + 1) + ( (y + 1) * nodesWidth))  )); // f
-							
-						} else {
-							if (y == 0) {
-								/* ________
-								 * |( C d )
-								 * |( e f )
-								 */
-								currentNode.addConnection(nodes.get(  ( (x + 1) + ( (y + 0) * nodesWidth))  )); // d
-								currentNode.addConnection(nodes.get(  ( (x + 1) + ( (y + 1) * nodesWidth))  )); // f
-								currentNode.addConnection(nodes.get(  ( (x + 0) + ( (y + 1) * nodesWidth))  )); // e
-								
-							} else {
-								/*
-								 * |( a b )
-								 * |( C d )
-								 * ________
-								 */
-								currentNode.addConnection(nodes.get(  ( (x + 0) + ( (y - 1) * nodesWidth))  )); // a
-								currentNode.addConnection(nodes.get(  ( (x + 1) + ( (y - 1) * nodesWidth))  )); // b
-								currentNode.addConnection(nodes.get(  ( (x + 1) + ( (y + 0) * nodesWidth))  )); // d
-							}
-							
-						}
-					} 
-					else if (x == nodesWidth) {
-						if ( (y != 0) && (y != nodesHeight) ) {
-							if (y == 0) {
-								/*_________
-								 * ( c D )|
-								 * ( e f )|
-								 */
-								currentNode.addConnection(nodes.get(  ( (x - 1) + ( (y + 0) * nodesWidth))  )); // c
-								currentNode.addConnection(nodes.get(  ( (x - 1) + ( (y + 1) * nodesWidth))  )); // e
-								currentNode.addConnection(nodes.get(  ( (x + 0) + ( (y + 1) * nodesWidth))  )); // f
-								
-							} else {
-								/*
-								 * ( a b )|
-								 * ( c D )|
-								 * ________
-								 */
-								currentNode.addConnection(nodes.get(  ( (x - 1) + ( (y + 0) * nodesWidth))  )); // c
-								currentNode.addConnection(nodes.get(  ( (x - 1) + ( (y - 1) * nodesWidth))  )); // a
-								currentNode.addConnection(nodes.get(  ( (x + 0) + ( (y - 1) * nodesWidth))  )); // b
-							}
-						}
-						else {
-							/*
-							 * ( a b )|
-							 * ( c D )|
-							 * ( e f )|
-							 */
-							currentNode.addConnection(nodes.get(  ( (x - 1) + ( (y - 1) * nodesWidth))  )); // a
-							currentNode.addConnection(nodes.get(  ( (x - 1) + ( (y + 0) * nodesWidth))  )); // c
-							currentNode.addConnection(nodes.get(  ( (x - 1) + ( (y + 1) * nodesWidth))  )); // e
-							currentNode.addConnection(nodes.get(  ( (x + 0) + ( (y - 1) * nodesWidth))  )); // b
-							currentNode.addConnection(nodes.get(  ( (x + 0) + ( (y + 1) * nodesWidth))  )); // f
-						}
+					if (f_top) {
+						currentNode.addConnection(nodes.get( ( (x + 0) + ( (y + 1) * nodesWidth)) ));
+						currentNode.addConnection(nodes.get( ( (x + 1) + ( (y + 1) * nodesWidth)) ));
 					}
+					else if (f_bottom) {
+						currentNode.addConnection(nodes.get( ( (x + 0) + ( (y - 1) * nodesWidth)) ));
+						currentNode.addConnection(nodes.get( ( (x + 1) + ( (y - 1) * nodesWidth)) ));
+					} else {
+						currentNode.addConnection(nodes.get( ( (x + 0) + ( (y + 1) * nodesWidth)) ));
+						currentNode.addConnection(nodes.get( ( (x + 1) + ( (y + 1) * nodesWidth)) ));
+						currentNode.addConnection(nodes.get( ( (x + 0) + ( (y - 1) * nodesWidth)) ));
+						currentNode.addConnection(nodes.get( ( (x + 1) + ( (y - 1) * nodesWidth)) ));
+					}
+				}
+				else if (f_right) {
+					currentNode.addConnection(nodes.get( ( (x - 1) + ( (y + 0) * nodesWidth)) ));
+					if (f_top) {
+						currentNode.addConnection(nodes.get( ( (x - 1) + ( (y + 1) * nodesWidth)) ));
+						currentNode.addConnection(nodes.get( ( (x + 0) + ( (y + 1) * nodesWidth)) ));
+					}
+					else if (f_bottom) {
+						currentNode.addConnection(nodes.get( ( (x + 0) + ( (y - 1) * nodesWidth)) ));
+						currentNode.addConnection(nodes.get( ( (x - 1) + ( (y - 1) * nodesWidth)) ));
+					} else {
+						currentNode.addConnection(nodes.get( ( (x + 0) + ( (y + 1) * nodesWidth)) ));
+						currentNode.addConnection(nodes.get( ( (x - 1) + ( (y - 1) * nodesWidth)) ));
+						currentNode.addConnection(nodes.get( ( (x + 0) + ( (y - 1) * nodesWidth)) ));
+						currentNode.addConnection(nodes.get( ( (x - 1) + ( (y + 1) * nodesWidth)) ));
+					}
+				}
+				else if (f_top) {
+					currentNode.addConnection(nodes.get( ( (x - 1) + ( (y + 0) * nodesWidth)) ));
+					currentNode.addConnection(nodes.get( ( (x + 1) + ( (y + 0) * nodesWidth)) ));
+					currentNode.addConnection(nodes.get( ( (x + 0) + ( (y + 1) * nodesWidth)) ));
+					currentNode.addConnection(nodes.get( ( (x - 1) + ( (y + 1) * nodesWidth)) ));
+					currentNode.addConnection(nodes.get( ( (x + 1) + ( (y + 1) * nodesWidth)) ));
+
+				}
+				else if (f_bottom) {
+					currentNode.addConnection(nodes.get( ( (x - 1) + ( (y + 0) * nodesWidth)) ));
+					currentNode.addConnection(nodes.get( ( (x + 1) + ( (y + 0) * nodesWidth)) ));
+					currentNode.addConnection(nodes.get( ( (x + 0) + ( (y - 1) * nodesWidth)) ));
+					currentNode.addConnection(nodes.get( ( (x + 1) + ( (y - 1) * nodesWidth)) ));
+					currentNode.addConnection(nodes.get( ( (x - 1) + ( (y - 1) * nodesWidth)) ));
+				} else {
+					currentNode.addConnection(nodes.get( ( (x - 1) + ( (y + 0) * nodesWidth)) ));
+					currentNode.addConnection(nodes.get( ( (x + 1) + ( (y + 0) * nodesWidth)) ));
+					currentNode.addConnection(nodes.get( ( (x + 0) + ( (y - 1) * nodesWidth)) ));
+					currentNode.addConnection(nodes.get( ( (x + 1) + ( (y - 1) * nodesWidth)) ));
+					currentNode.addConnection(nodes.get( ( (x - 1) + ( (y - 1) * nodesWidth)) ));
+					currentNode.addConnection(nodes.get( ( (x - 1) + ( (y + 1) * nodesWidth)) ));
+					currentNode.addConnection(nodes.get( ( (x + 0) + ( (y + 1) * nodesWidth)) ));
+					currentNode.addConnection(nodes.get( ( (x + 1) + ( (y + 1) * nodesWidth)) ));
 				}
 			}
 		}
 	}
 	
-	// TODO: Create a map using an adjacency matrix to create a node 'mesh'
 	
 	private boolean createNodeMap() {
 		generatePoints();
@@ -277,6 +242,7 @@ public class MapGenerator extends JPanel {
 		}
 	}
 	
+	
 	private void generateWeights() {
 		// Randomly generate the connection weights
 		for (int i = 0; i < 2; i++) {
@@ -292,24 +258,33 @@ public class MapGenerator extends JPanel {
 	}
 	
 	
+	public Node getEnd() {
+		return endNode;
+	}
+	
+	
+	public void setEnd(Node n) {
+		System.out.println("End set");
+		endNode = n;
+	}
 	
 	
 	@Override
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		
-		g.setColor(Color.BLACK);
+		g.setColor(Color.WHITE);
 		
 		for (Node n: nodes) {
 			if (n.getConnections() != null) {
 				for (Node c: n.getConnections()) {
-					if (n.getInSequence() && c.getInSequence()) {
-						drawSequenceConnection(g, n, c);
-					} else {
-						drawConnection(g, n, c);
-					}
+					drawConnection(g, n, c, Color.BLACK, 1);
 				}
 			}
+		}
+		
+		if (endNode != null) {
+			drawSequence(g, endNode);
 		}
 		
 		for (Node n: nodes) {
@@ -321,20 +296,28 @@ public class MapGenerator extends JPanel {
 	
 	
 	private void drawNode(Graphics g, Node n) {
-//		g.setColor(Color.WHITE);
-//		g.fillOval(n.getX() - NODE_RADIUS, n.getY() - NODE_RADIUS, 2 * NODE_RADIUS, 2 * NODE_RADIUS);
+
 		g.setColor(Color.BLACK);
 		g.drawOval(n.getX() - NODE_RADIUS, n.getY() - NODE_RADIUS, 2 * NODE_RADIUS, 2 * NODE_RADIUS);
-//		g.drawString(n.getId(), n.getX(), n.getY());
+		//g.drawString(n.getId(), n.getX(), n.getY());
 	}
 
-	private void drawConnection(Graphics g, Node a, Node b) {
-		g.setColor(Color.GRAY.darker());
-		g.drawLine(a.getX(), a.getY(), b.getX(), b.getY());
+	private void drawConnection(Graphics g, Node a, Node b, Color col, int thickness) {
+		Graphics2D g2 = (Graphics2D) g;
+		g2.setStroke(new BasicStroke(thickness));
+		g2.setColor(col);
+		g2.drawLine(a.getX(), a.getY(), b.getX(), b.getY());
 	}
-	private void drawSequenceConnection(Graphics g, Node a, Node b) {
-		g.setColor(Color.BLUE.brighter());
-		g.drawLine(a.getX(), a.getY(), b.getX(), b.getY());
+	
+	private void drawSequence(Graphics g, Node end) {
+		Node prev = end.getFrom();
+		Node curr = end;
+		
+		while (curr != null) {
+			drawConnection(g, prev, curr, Color.GREEN, 3);
+			prev = curr;
+			curr = curr.getFrom();
+		}
 	}
 	
 }

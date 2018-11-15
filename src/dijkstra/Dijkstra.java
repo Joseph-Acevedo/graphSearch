@@ -1,48 +1,50 @@
 package dijkstra;
 
+import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Stack;
 import mapGenerator.MapGenerator;
+import mathUtilities.MergeSort;
 
 
 public class Dijkstra {
 	
-	private static int INF = -1;
+	private static int INF = Integer.MAX_VALUE;
 	
 	private Node[] nodes;
 	
-	//private ArrayList<Node> sequence;
-	private ArrayList<Node> unvisited;
-	private Stack<Node> visited;
+	public ArrayList<Node> currSeq;
+	private ArrayList<Node> Q; // TODO: Unvisited
+	private Stack<Node> S; // TODO: Visited Nodes
 	
-	private Node current;
-	
-	private String startID;
+	private Node u; // TODO: Also changed, current I think?
+		
+	private String source;
 	private String endID;
 	
 	private MapGenerator map;
 	
 	
 	public Dijkstra(int numNodes, String start, String end) { 
-		//map = new MapGenerator(numNodes);
-		map = new MapGenerator( (int) (Math.sqrt(numNodes)),  (int) (Math.sqrt(numNodes)) );
+		currSeq = new ArrayList<Node>();
+		
+		map = new MapGenerator( (int) (Math.sqrt(numNodes)),  (int) (Math.sqrt(numNodes)), this );
 		nodes = map.getNodes();
 		
-		startID = start;
+		source = start;
 		endID = end;
 		
-		//sequence = new ArrayList<Node>();
-		unvisited = new ArrayList<Node>();
-		visited = new Stack<Node>();
+		Q = new ArrayList<Node>();
+		S = new Stack<Node>();
 		
 		for (Node n: nodes) {
-			if (n.getId().equals(start)) {
-				current = n;
-				current.setDistance(0);
-				current.setFrom(null);
-				unvisited.add(n);
+			if (n.getId().equals(source)) {
+				u = n;
+				u.setDistance(0);
+				u.setFrom(null);
+				Q.add(n);
 			} else {
-				unvisited.add(n);
+				Q.add(n);
 				n.setDistance(INF);
 			}
 		}
@@ -51,49 +53,45 @@ public class Dijkstra {
 	}
 	
 	private void runDijkstra() {
-		// While we still have nodes to check
-		// TODO: This will only )work if I remove the nodes with no connections, maybe,
+		// TODO: This will only work if I remove the nodes with no connections, maybe,
 		// It might just run through that node quickly and throw it out
-		while ( !unvisited.isEmpty() ) {
-			double minDist = unvisited.get(0).getDistance();
-			Node minimum = unvisited.get(0);
-			for (Node n: unvisited) {
-				if ( (n.getDistance() < minDist) && (minDist != INF) ) {
-					minDist = n.getDistance();
-					minimum = n;
+		System.out.println("Starting");
+		
+		while ( !Q.isEmpty() ) {
+			
+			
+			Node[] ordered = MergeSort.mergeSort( Q.toArray( new Node[Q.size()] ) );
+			u = ordered[0]; // TODO: current node
+			S.add(u);
+			Q.remove(u);
+			for ( Node v: u.getConnections() ) {
+				if (v.getDistance() > (u.getDistance() + u.distToNode(v))) {
+					v.setDistance(u.getDistance() + u.distToNode(v));
+					v.setFrom(u);
+					if (v.getId().equals(endID)) {
+						tracebackPath(v);
+						//map.setEnd(v);
+						return;
+					}
 				}
 			}
-			
-			unvisited.remove(minimum);
-			current = minimum;
-			considerNode(current);
-			visited.add(current);
-			current.setInSequence(true);
 		}
 	}
 	
-	private void considerNode(Node n) {
-		Node[] connections = n.getConnections();
-		double[] tenativeDistances = n.getDistances();
-		
-		// Distance is total current distance + tentative distance to node
-		// TODO: Make sure visited nodes are never checked again (Done, hopefully)
-		// This loops through all connections and checks if their length is lower
-		for (int i = 0; i < tenativeDistances.length; i++) {
-			tenativeDistances[i] += n.getDistance();
-			if ( !visited.contains(connections[i]) && (tenativeDistances[i] < connections[i].getDistance() || connections[i].getDistance() == INF) ) {
-				connections[i].setDistance(tenativeDistances[i]);
-				connections[i].setFrom(n);
-			}
+	
+	private void tracebackPath(Node end) {
+		Node curr = end;
+		System.out.println("Tracing");
+		while (curr != null) {
+			System.out.printf("%s->", curr.getId());
+			curr = curr.getFrom();
 		}
-		
-		
+		map.setEnd(end);
 	}
 	
 	
 	public static void main(String[] args) {
-		new Dijkstra(25, "1", "10");
-		//new MapGenerator(50, 50);
+		new Dijkstra( (int) (Math.pow(20, 2)), "", "337");
 	}
 	
 	

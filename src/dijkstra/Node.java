@@ -12,7 +12,8 @@ public class Node {
 	private ArrayList<Node> connections;
 	private double distance;
 	private Node nodeFrom;
-	private boolean isSequence = false;
+	
+	public boolean beingConsidered = false;
 	
 	public Node(long id, Point location) {
 		this.id = id;
@@ -47,19 +48,15 @@ public class Node {
 	}
 	
 	public Node getFrom() {
-		return nodeFrom; 
+		if (nodeFrom != null) {
+			return nodeFrom;
+		} else {
+			return null;
+		}
 	}
 	
 	public void setFrom(Node n) {
 		nodeFrom = n;
-	}
-	
-	public boolean getInSequence() {
-		return isSequence;
-	}
-	
-	public void setInSequence(boolean is) {
-		isSequence = is;
 	}
 	
 	public Node getConnection(int index) {
@@ -80,6 +77,10 @@ public class Node {
 	}
 	
 	public Node[] getConnections() {
+		//System.out.printf("Node %s connected to: \n", getId());
+		for (Node n: connections) {
+			//System.out.println("\t" + n.getId() );
+		}
 		if(connections.size() != 0) {
 			return connections.toArray(new Node[connections.size()]);
 		} else {
