@@ -13,6 +13,7 @@ public class Node {
 	private double distance;
 	private Node nodeFrom;
 	
+	private boolean visible = true;
 	public boolean beingConsidered = false;
 	
 	public Node(long id, Point location) {
@@ -97,4 +98,11 @@ public class Node {
 		return MathUtilities.euclideanDistance(this.loc, n.getLoc());
 	}
 	
+	public boolean isVisible() {
+		return visible;
+	}
+
+	public void setVisibile(boolean v) {
+		visible = v;
+	}
 }

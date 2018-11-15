@@ -19,8 +19,8 @@ public class Dijkstra {
 	
 	private Node u; // TODO: Also changed, current I think?
 		
-	private String source;
-	private String endID;
+	public String source;
+	public String endID;
 	
 	private MapGenerator map;
 	
@@ -45,8 +45,10 @@ public class Dijkstra {
 				u.setFrom(null);
 				Q.add(n);
 			} else {
-				Q.add(n);
-				n.setDistance(INF);
+				if (n.isVisible()) {
+					Q.add(n);
+					n.setDistance(INF);
+				}
 			}
 		}
 		
@@ -66,13 +68,15 @@ public class Dijkstra {
 			S.add(u);
 			Q.remove(u);
 			for ( Node v: u.getConnections() ) {
-				if (v.getDistance() > (u.getDistance() + u.distToNode(v))) {
-					v.setDistance(u.getDistance() + u.distToNode(v));
-					v.setFrom(u);
-					if (v.getId().equals(endID)) {
-						tracebackPath(v);
-						//map.setEnd(v);
-						return;
+				if (v.isVisible()) {
+					if (v.getDistance() > (u.getDistance() + u.distToNode(v))) {
+						v.setDistance(u.getDistance() + u.distToNode(v));
+						v.setFrom(u);
+						if (v.getId().equals(endID)) {
+							tracebackPath(v);
+							//map.setEnd(v);
+							return;
+						}
 					}
 				}
 			}
@@ -92,7 +96,7 @@ public class Dijkstra {
 	
 	
 	public static void main(String[] args) {
-		new Dijkstra(20, 20, new Point(0, 0), new Point(19, 3));
+		new Dijkstra(20, 20, new Point(0, 0), new Point(19, 7));
 	}
 	
 	

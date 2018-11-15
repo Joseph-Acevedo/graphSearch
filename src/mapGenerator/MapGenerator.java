@@ -26,6 +26,7 @@ public class MapGenerator extends JPanel {
 	private static final int CONNECTION_WIDTH = 5;
 	/* GENERATION CONSTANTS */
 	private static final float MIN_WEIGHT_FOR_CONNECTION = 7.0f;
+	private static final float MIN_WEIGHT_FOR_VISIBILITY = 0.2f;
 	
 	private JFrame frame;
 	private Dijkstra pathfinder;
@@ -81,7 +82,6 @@ public class MapGenerator extends JPanel {
 		// TODO: Creating connections doesn't work correctly
 		pathfinder = pfinder;
 		
-		boolean[][] adjacencyMatrix = new boolean[nodesWidth*nodesHeight][nodesWidth*nodesHeight];
 		nodes = new ArrayList<Node>();
 		
 		float xDist = WIDTH / nodesWidth;
@@ -90,6 +90,10 @@ public class MapGenerator extends JPanel {
 		for (int y = 0; y < nodesWidth; y++) {
 			for (int x = 0; x < nodesHeight; x++) {
 				nodes.add( new Node( currId++, new Point( (int) (x*xDist), (int) (y*yDist) ) ) );
+				double randVis = Math.random();
+				if (randVis < MIN_WEIGHT_FOR_VISIBILITY ) {
+					nodes.get(nodes.size() - 1).setVisibile(false);
+				}
 			}
 		}
 		
@@ -108,7 +112,6 @@ public class MapGenerator extends JPanel {
 		frame.setVisible(true);
 		
 	}
-	
 	
 	private void createNodeGrid(int nodesWidth, int nodesHeight) {
 		Node currentNode;
@@ -198,7 +201,6 @@ public class MapGenerator extends JPanel {
 		}
 	}
 	
-	
 	private boolean createNodeMap() {
 		generatePoints();
 		
@@ -230,7 +232,6 @@ public class MapGenerator extends JPanel {
 		return true;
 	}
 	
-	
 	private void generatePoints() {
 		// Randomly generate the node locations
 		for (int i = 0; i < n; i++) {
@@ -242,7 +243,6 @@ public class MapGenerator extends JPanel {
 		}
 	}
 	
-	
 	private void generateWeights() {
 		// Randomly generate the connection weights
 		for (int i = 0; i < 2; i++) {
@@ -252,16 +252,13 @@ public class MapGenerator extends JPanel {
 		}
 	}
 	
-	
 	public Node[] getNodes() {
 		return nodes.toArray(new Node[nodes.size()]);
 	}
 	
-	
 	public Node getEnd() {
 		return endNode;
 	}
-	
 	
 	public void setEnd(Node n) {
 		System.out.println("End set");
@@ -276,9 +273,11 @@ public class MapGenerator extends JPanel {
 		g.setColor(Color.WHITE);
 		
 		for (Node n: nodes) {
-			if (n.getConnections() != null) {
+			if (n.isVisible() && n.getConnections() != null) {
 				for (Node c: n.getConnections()) {
-					drawConnection(g, n, c, Color.BLACK, 1);
+					if (c.isVisible()) {
+						drawConnection(g, n, c, Color.BLACK, 1);
+					}
 				}
 			}
 		}
@@ -288,7 +287,9 @@ public class MapGenerator extends JPanel {
 		}
 		
 		for (Node n: nodes) {
-			drawNode(g, n);
+			if (n.isVisible()) {
+				drawNode(g, n);
+			}
 		}
 		
 		this.repaint();
