@@ -26,15 +26,27 @@ public class Dijkstra {
 	
 	
 	public Dijkstra(int nodesWidth, int nodesHeight, Point start, Point end) { 
-		currSeq = new ArrayList<Node>();
 		
 		map = new MapGenerator( nodesWidth,  nodesHeight, this );
 		//map = new MapGenerator(nodesWidth*nodesHeight);
 		nodes = map.getNodes();
 		
+		
 		source = Integer.toString(start.x + (start.y * nodesWidth));
 		endID = Integer.toString(end.x + (end.y * nodesWidth));
 		
+		initDijkstra();
+		runDijkstra();
+	}
+	
+	public void resetDijkstra() {
+		initDijkstra();
+		runDijkstra();
+	}
+	
+	private void initDijkstra() {
+		currSeq = new ArrayList<Node>();
+
 		Q = new ArrayList<Node>();
 		S = new Stack<Node>();
 		
@@ -51,8 +63,6 @@ public class Dijkstra {
 				}
 			}
 		}
-		
-		runDijkstra();
 	}
 	
 	private void runDijkstra() {
@@ -61,8 +71,6 @@ public class Dijkstra {
 		System.out.println("Starting");
 		
 		while ( !Q.isEmpty() ) {
-			
-			
 			Node[] ordered = MergeSort.mergeSort( Q.toArray( new Node[Q.size()] ) );
 			u = ordered[0]; // TODO: current node
 			S.add(u);
@@ -74,7 +82,6 @@ public class Dijkstra {
 						v.setFrom(u);
 						if (v.getId().equals(endID)) {
 							tracebackPath(v);
-							//map.setEnd(v);
 							return;
 						}
 					}
@@ -96,7 +103,9 @@ public class Dijkstra {
 	
 	
 	public static void main(String[] args) {
-		new Dijkstra(20, 20, new Point(0, 0), new Point(19, 7));
+		int width = 20;
+		int height  = 20;
+		new Dijkstra(width, height, new Point(0, 0), new Point(width - 1, height - 1));
 	}
 	
 	

@@ -7,14 +7,17 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import mathUtilities.MathUtilities;
 import dijkstra.Dijkstra;
 import dijkstra.Node;
+import mathUtilities.MathUtilities;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-public class MapGenerator extends JPanel {
+public class MapGenerator extends JPanel implements MouseListener {
 	
 
 	/* GRAPHICS CONSTANTS */
@@ -27,6 +30,7 @@ public class MapGenerator extends JPanel {
 	/* GENERATION CONSTANTS */
 	private static final float MIN_WEIGHT_FOR_CONNECTION = 7.0f;
 	private static final float MIN_WEIGHT_FOR_VISIBILITY = 0.2f;
+	private static final float MAX_RADIUS_FOR_CLICK = 10.0f;
 	
 	private JFrame frame;
 	private Dijkstra pathfinder;
@@ -81,6 +85,7 @@ public class MapGenerator extends JPanel {
 	public MapGenerator(int nodesWidth, int nodesHeight, Dijkstra pfinder) {
 		// TODO: Creating connections doesn't work correctly
 		pathfinder = pfinder;
+		addMouseListener(this);
 		
 		nodes = new ArrayList<Node>();
 		
@@ -90,10 +95,6 @@ public class MapGenerator extends JPanel {
 		for (int y = 0; y < nodesWidth; y++) {
 			for (int x = 0; x < nodesHeight; x++) {
 				nodes.add( new Node( currId++, new Point( (int) (x*xDist), (int) (y*yDist) ) ) );
-				double randVis = Math.random();
-				if (randVis < MIN_WEIGHT_FOR_VISIBILITY ) {
-					nodes.get(nodes.size() - 1).setVisibile(false);
-				}
 			}
 		}
 		
@@ -319,6 +320,49 @@ public class MapGenerator extends JPanel {
 			prev = curr;
 			curr = curr.getFrom();
 		}
+	}
+
+	
+	@Override
+	public void mouseClicked(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+		for (Node n: nodes) {
+			if (MathUtilities.euclideanDistance(n.getLoc(), arg0.getPoint()) <= MAX_RADIUS_FOR_CLICK) {
+				n.setVisibile(!n.isVisible());
+				pathfinder.resetDijkstra();
+				break;
+			}
+		}
+		
+	}
+	
+
+	@Override
+	public void mouseEntered(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	
+	@Override
+	public void mouseExited(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	
+	@Override
+	public void mousePressed(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	
+	@Override
+	public void mouseReleased(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+		
 	}
 	
 }
