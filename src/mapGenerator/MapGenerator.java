@@ -22,15 +22,19 @@ public class MapGenerator extends JPanel implements MouseListener {
 
 	/* GRAPHICS CONSTANTS */
 	private static final long serialVersionUID = 1L;
-	private static final int WIDTH  = 800;
-	private static final int HEIGHT = 800;
+	private static final int WIDTH  = 1000;
+	private static final int HEIGHT = 1000;
 	private static final int SAFE_SIZE = 50;
-	private static final int NODE_RADIUS = 2;
+	private static final int NODE_RADIUS = 1;
 	private static final int CONNECTION_WIDTH = 5;
 	/* GENERATION CONSTANTS */
 	private static final float MIN_WEIGHT_FOR_CONNECTION = 7.0f;
 	private static final float MIN_WEIGHT_FOR_VISIBILITY = 0.2f;
 	private static final float MAX_RADIUS_FOR_CLICK = 10.0f;
+	/* GLOBAL FLAGS */
+	private boolean mousePressed = false;
+	private boolean setDragVisibility = false;
+	private Point mouseLoc;
 	
 	private JFrame frame;
 	private Dijkstra pathfinder;
@@ -273,6 +277,17 @@ public class MapGenerator extends JPanel implements MouseListener {
 		
 		g.setColor(Color.WHITE);
 		
+		if (mousePressed) {
+			mouseLoc = getMousePosition();
+			for (Node n: nodes) {
+				if (mouseLoc != null) {
+					if (MathUtilities.euclideanDistance(n.getLoc(), mouseLoc) <= MAX_RADIUS_FOR_CLICK) {
+						n.setVisibile(setDragVisibility);
+					}
+				}
+			}
+		}
+		
 		for (Node n: nodes) {
 			if (n.isVisible() && n.getConnections() != null) {
 				for (Node c: n.getConnections()) {
@@ -282,7 +297,6 @@ public class MapGenerator extends JPanel implements MouseListener {
 				}
 			}
 		}
-		
 		if (endNode != null) {
 			drawSequence(g, endNode);
 		}
@@ -292,6 +306,7 @@ public class MapGenerator extends JPanel implements MouseListener {
 				drawNode(g, n);
 			}
 		}
+		
 		
 		this.repaint();
 	}
@@ -316,7 +331,7 @@ public class MapGenerator extends JPanel implements MouseListener {
 		Node curr = end;
 		
 		while (curr != null) {
-			drawConnection(g, prev, curr, Color.GREEN, 3);
+			drawConnection(g, prev, curr, Color.BLUE, 3);
 			prev = curr;
 			curr = curr.getFrom();
 		}
@@ -329,7 +344,7 @@ public class MapGenerator extends JPanel implements MouseListener {
 		
 		for (Node n: nodes) {
 			if (MathUtilities.euclideanDistance(n.getLoc(), arg0.getPoint()) <= MAX_RADIUS_FOR_CLICK) {
-				n.setVisibile(!n.isVisible());
+				n.setVisibile(setDragVisibility);
 				pathfinder.resetDijkstra();
 				break;
 			}
@@ -355,6 +370,14 @@ public class MapGenerator extends JPanel implements MouseListener {
 	@Override
 	public void mousePressed(MouseEvent arg0) {
 		// TODO Auto-generated method stub
+		mousePressed = true;
+		mouseLoc = getMousePosition();
+		for (Node n: nodes) {
+			if (MathUtilities.euclideanDistance(n.getLoc(), mouseLoc) <= MAX_RADIUS_FOR_CLICK) {
+				setDragVisibility = !n.isVisible();
+				n.setVisibile(setDragVisibility);
+			}
+		}
 		
 	}
 
@@ -362,7 +385,8 @@ public class MapGenerator extends JPanel implements MouseListener {
 	@Override
 	public void mouseReleased(MouseEvent arg0) {
 		// TODO Auto-generated method stub
-		
+		mousePressed = false;
+		pathfinder.resetDijkstra();
 	}
 	
 }

@@ -68,7 +68,7 @@ public class Dijkstra {
 	private void runDijkstra() {
 		// TODO: This will only work if I remove the nodes with no connections, maybe,
 		// It might just run through that node quickly and throw it out
-		System.out.println("Starting");
+		//System.out.println("Starting");
 		
 		while ( !Q.isEmpty() ) {
 			Node[] ordered = MergeSort.mergeSort( Q.toArray( new Node[Q.size()] ) );
@@ -93,18 +93,18 @@ public class Dijkstra {
 	
 	private void tracebackPath(Node end) {
 		Node curr = end;
-		System.out.println("Tracing");
-		while (curr != null) {
-			System.out.printf("%s->", curr.getId());
-			curr = curr.getFrom();
-		}
+//		System.out.println("Tracing");
+//		while (curr != null) {
+//			System.out.printf("%s->", curr.getId());
+//			curr = curr.getFrom();
+//		}
 		map.setEnd(end);
 	}
 	
 	
 	public static void main(String[] args) {
-		int width = 20;
-		int height  = 20;
+		int width = 50;
+		int height  = 50;
 		new Dijkstra(width, height, new Point(0, 0), new Point(width - 1, height - 1));
 	}
 	
