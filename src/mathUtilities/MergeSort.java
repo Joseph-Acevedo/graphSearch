@@ -1,3 +1,9 @@
+/**
+ * @author	Joseph Acevedo
+ * @since 	07 October, 2018
+ */
+
+
 package mathUtilities;
 
 import dijkstra.Node;

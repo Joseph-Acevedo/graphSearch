@@ -1,3 +1,8 @@
+/**
+ * @author	Joseph Acevedo
+ * @since 	07 October, 2018
+ */
+
 package mathUtilities;
 
 import java.awt.Point;
@@ -7,12 +12,12 @@ public class MathUtilities
 	
 	
 	/**
-	 * Multiples 2 2-dimensional matrices together given their dimensions are compatible
-	 * @param mat_a A 2-Dimensional matrix to be multiplied
-	 * @param mat_b A 2-Dimensional matrix to be multiplied
+	 * Multiples 2  matrices together given their dimensions are compatible
+	 * @param mat_a A matrix to be multiplied
+	 * @param mat_b A matrix to be multiplied
 	 * @return		The product of the two matrices if compatible dimensions, null otherwise
 	 */
-	public static double[][] matrixMultiply2D(double[][] mat_a, double[][] mat_b)
+	public static double[][] matrixMultiply(double[][] mat_a, double[][] mat_b)
 	{
 		int aRows = mat_a.length;
         int aColumns = mat_a[0].length;
@@ -45,7 +50,7 @@ public class MathUtilities
 	 * @param mat The matrix to transpose
 	 * @return	  The transposed matrix
 	 */
-	public static double[][] matrixTranspose2D(double[][] mat)
+	public static double[][] matrixTranspose(double[][] mat)
 	{
 		double[][] result = new double[mat[0].length][mat.length];
 		
@@ -76,7 +81,7 @@ public class MathUtilities
 	{
 		double[][] mat_a = {{1,2},{3,4},{5,6}};
 		double[][] mat_b = {{7,8,9},{10,11,12}};
-		double[][] mat_c = matrixTranspose2D(mat_a);
+		double[][] mat_c = matrixTranspose(mat_a);
 		
 		for(int x = 0; x < mat_c.length; x++)
 		{

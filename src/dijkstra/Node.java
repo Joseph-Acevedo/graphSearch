@@ -1,3 +1,8 @@
+/**
+ * @author	Joseph Acevedo
+ * @since 	07 October, 2018
+ */
+
 package dijkstra;
 
 import java.awt.Point;
